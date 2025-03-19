@@ -61,6 +61,7 @@ class Player(Person):
         self.count_of_games = 0
         self.wins = 0
         self.score = {'plus': 0, 'minus': 0}
+        self.coins = 1000
 
     def __str__(self):
         return f"| {super().__str__()}, state: {self.state} |"
@@ -115,15 +116,17 @@ class Match:
     
 
 
-    def play(self):
+    def play(self, bet):
         if self.__roll() == 1:
             self.hp_points += 1
             self.n = 1
-            print(f"{self.h_player.nickname} získává bod! (Skóre: {self.hp_points} - {self.gp_points})")
+            self.g_player.coins -= bet
+            print(f"{self.h_player.nickname} získává bod! (Skóre: {self.hp_points} - {self.gp_points})  Your coins: {self.g_player.coins}")
         else:
             self.gp_points += 1
             self.n = 2
-            print(f"{self.g_player.nickname} získává bod! (Skóre: {self.hp_points} - {self.gp_points})")
+            self.g_player.coins += bet
+            print(f"{self.g_player.nickname} získává bod! (Skóre: {self.hp_points} - {self.gp_points}) Your coins: {self.h_player.coins}")
         self._history.append(self.score())
         self.h_player.count_of_games += 1
         self.g_player.count_of_games += 1
@@ -163,27 +166,3 @@ class Match:
     def get_roll(self):
         return self.__roll()
 
-# class Tournament:
-#     def __init__(self, players: list):
-#         self.players = players
-#         self.matches_history = []
-#
-#     def play(self):
-#         for i in range(len(self.players)):
-#             for j in range(i + 1, len(self.players)):
-#                 player1 = self.players[i]
-#                 player2 = self.players[j]
-#
-#                 # Vytvoření a spuštění zápasu mezi hráči
-#                 match = Match(player1, player2)
-#                 match.play()
-#                 self.matches_history.append(match)
-#
-#     def results(self):
-#         table_data = []
-#         for match in self.matches_history:
-#             table_data.append([match.h_player.nickname, match.g_player.nickname, match.hp_points, match.gp_points])
-#
-#         # Vytvoření tabulky
-#         headers = ["Player 1", "Player 2", "Player 1 Score", "Player 2 Score"]
-#         print(tabulate(table_data, headers=headers, tablefmt="grid"))

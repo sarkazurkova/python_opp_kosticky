@@ -17,6 +17,8 @@ GRAY = (200, 200, 200)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 
+bet = 100
+
 # Vytvoření hráčů
 host_player = Player("PC", Gender.male)
 guest_player = Player("You", Gender.female)
@@ -86,6 +88,8 @@ def draw_text(won):
 
     round_score_text(won)
 
+    coins_text()
+
     # Zobrazení pokynů pro hráče
     instruction_surface = font.render(instruction_text, True, BLACK)
     screen.blit(instruction_surface, (WIDTH // 2 - instruction_surface.get_width() // 2, HEIGHT - 100))
@@ -111,6 +115,12 @@ def round_score_text(won):
     else:
         pass
 
+def coins_text():
+    font = pygame.font.Font(None, 40)
+    text = font.render(f"Coins: {guest_player.coins}", True, BLACK)
+    screen.blit(text, (30, 400))
+    bet_text = font.render(f"Bet coins: {bet}", True, BLACK)
+    screen.blit(bet_text, (30, 450))
 
 # Tlačítko pro zobrazení pravidel
 class Button:
@@ -137,7 +147,9 @@ def show_rules():
     rules = [
         "Host is playing with 2 dices, you play with 1.",
         "If the number on your dice is between the numbers on host's dices, you win!",
+        "You can increase your bet with UP arrow and decrease it with DOWN arrow.",
         "You can play by pressing the spacebar.",
+        "The game end after you loose all your coins!!"
         "Your chances to win are lower than 50%, so good luck!"
     ]
     screen.fill(WHITE)
@@ -154,12 +166,21 @@ def reset_game():
     global match
     match = Match(host_player, guest_player)
 
+def end_screen():
+    screen.fill(BLACK)
+    font = pygame.font.Font(None, 80)
+    text = font.render("GAME OVER", True, RED)
+    screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
+    pygame.display.flip()
+    pygame.time.delay(2000)
+
 # Vytvoření objektů kostek
 host_dice1 = DiceSprite(WIDTH // 3, HEIGHT // 3)
 host_dice2 = DiceSprite(2 * WIDTH // 3, HEIGHT // 3)
 guest_dice = DiceSprite(WIDTH // 2, 2 * HEIGHT // 3)
 
 dice_sprites = [host_dice1, host_dice2, guest_dice]
+
 
 # Vytvoření tlačítka pravidel
 rules_button = Button(WIDTH - 150, HEIGHT - 50, 140, 40, "Rules", show_rules)
@@ -177,9 +198,17 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                if bet < guest_player.coins:
+                    bet += 100
+                    draw_text(match.n)
+            if event.key == pygame.K_DOWN:
+                if bet >= 200:
+                    bet -= 100
+                    draw_text(match.n)
             if event.key == pygame.K_SPACE:
                 if current_roll == 0:
-                    match.play()  # Použití metody play pro provedení hodu a vyhodnocení
+                    match.play(int(bet))  # Použití metody play pro provedení hodu a vyhodnocení
                     shuffle(dice_sprites)  # Zamíchání kostek před hodem
 
                     host_dice1.update_value(match.get_hp1())
@@ -187,6 +216,7 @@ while running:
                     shuffle_player(dice_sprites)
                     guest_dice.update_value(match.get_gp())
                     current_roll = 0  # Resetuje cyklus hodů
+                    bet = 100
         elif event.type == pygame.MOUSEBUTTONDOWN:
             rules_button.click(event.pos)
             reset_button.click(event.pos)
@@ -194,6 +224,10 @@ while running:
     redraw_screen(dice_sprites, match.n)
 
     pygame.display.flip()
+    if guest_player.coins < 100:
+        pygame.time.delay(1000)
+        end_screen()
+        running = False
 
 pygame.quit()
 
